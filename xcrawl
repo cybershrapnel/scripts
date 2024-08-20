@@ -1,0 +1,137 @@
+//x crawler,uses chatrtx script to talk to fastpapi server via clipboard to produce ai responses to random posts.
+
+async function runScript() {
+    console.log("Running script...");
+
+    let elements = document.querySelectorAll('div.css-175oi2r.r-xoduu5');
+    console.log("Found elements:", elements.length);
+
+    let matchingElements = Array.from(elements).filter(element => {
+        return element.querySelector('svg[viewBox="0 0 24 24"] path[d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"]');
+    });
+    console.log("Matching elements found:", matchingElements.length);
+
+    let randomElement = matchingElements[Math.floor(Math.random() * matchingElements.length)];
+
+    if (randomElement) {
+        randomElement.click();
+        console.log("Clicked random element");
+
+        // Throttle the observer to prevent multiple triggers
+        let timeoutId;
+        const observer = new MutationObserver(async (mutations, obs) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(async () => {
+                let popupContainer = document.querySelector('div[role="dialog"]');
+                if (popupContainer) {
+                    console.log("Popup detected");
+
+                    let popupText = popupContainer.innerText || popupContainer.textContent;
+                    console.log('Popup Text:', popupText);
+
+                    await sendTextForProcessing(popupText);
+
+                    let textAreaContainer = document.querySelector('div[contenteditable="true"][role="textbox"]');
+                    if (textAreaContainer) {
+                        console.log("Text area found");
+
+                        let processedText = await waitForProcessedText();
+
+                        // Remove all line returns from the processed text
+                        let textWithoutLineReturns = processedText.replace(/[\r\n]+/g, ' ');
+                        console.log("Processed text without line returns:", textWithoutLineReturns);
+
+                        // Check if the text area already contains the processed text to avoid duplication
+                        if (!textAreaContainer.innerText.includes(textWithoutLineReturns)) {
+                            textAreaContainer.focus();
+
+                            // Use the modern Clipboard API to insert text
+                            document.execCommand('insertText', false, textWithoutLineReturns);
+
+                            console.log("Inserted processed text into text area:", textWithoutLineReturns);
+                        } else {
+                            console.log("Processed text already exists in the text area.");
+                        }
+                                                        // Click the "Reply" button
+                                setTimeout(() => {
+                                    let replyButton = document.querySelector('button[data-testid="tweetButton"]');
+                                    if (replyButton) {
+                                        replyButton.click();
+                                    } else {
+                                        console.log('Reply button not found.');
+                                    }
+                                }, 5000); // Wait for 1 second before clicking the reply button
+                        // Disconnect observer after processing to prevent multiple triggers
+                        obs.disconnect();
+                    } else {
+                        console.log("Text area not found");
+                    }
+                }
+            }, 500); // Throttle time in ms
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+    } else {
+        console.log('No matching elements found.');
+    }
+}
+
+// Function to send text for processing by simulating a copy-paste action
+async function sendTextForProcessing(text) {
+    let message = `MEQUAVIS:${JSON.stringify({ user: "User", text: text, type: "text" })}`;
+    
+    // Retry mechanism
+    let attempts = 10;
+    let success = false;
+
+    while (attempts > 0 && !success) {
+        try {
+            await navigator.clipboard.writeText(message);
+            console.log('Sent for processing:', message);
+            success = true;
+        } catch (err) {
+            console.error('Error writing to clipboard:', err);
+            if (err.name === 'NotAllowedError' || err.name === 'DOMException') {
+                console.log('Waiting for document to be focused...');
+                // Wait for 1 second before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts--;
+            } else {
+                throw err; // If it's another error, don't retry
+            }
+        }
+    }
+
+    if (!success) {
+        console.log('Failed to write to clipboard after multiple attempts.');
+    }
+}
+
+
+// Function to wait for the processed text to appear in the clipboard
+async function waitForProcessedText() {
+    let clipboardContent = '';
+    let attempts = 90; // Number of attempts to check the clipboard
+    
+    for (let i = 0; i < attempts; i++) {
+        clipboardContent = await navigator.clipboard.readText();
+        console.log(`Clipboard content (Attempt ${i + 1}):`, clipboardContent);
+        
+        if (clipboardContent.startsWith("MREPLY:")) {
+            let data = JSON.parse(clipboardContent.slice(7)); // Remove the "MREPLY:" marker
+            console.log("Processed text received:", data.text);
+            return data.text;
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before checking again
+    }
+
+    console.log('Processed text not found in clipboard.');
+    return "hello"; // Default fallback text if processed text is not found
+}
+
+// Initial run with a 2-second delay before the script starts
+setTimeout(runScript, 2000); 
+
+// Loop every 100 seconds to re-run the script
+setInterval(runScript, 120000);
