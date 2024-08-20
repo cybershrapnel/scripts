@@ -1,0 +1,157 @@
+// Function to generate a random 8-digit seed value
+function generateSeed() {
+    return Math.floor(10000000 + Math.random() * 90000000);
+}
+
+// Variable to keep track of the last sent message and its user
+let lastSentMessage = null;
+let lastSentUser = null;
+let isProcessingReply = false;
+let lastProcessedRowIndex = -1; // Index of the last processed row
+
+// Function to identify and send the AI's reply back to the server
+async function checkForReply() {
+    if (!isProcessingReply) {
+        return;
+    }
+    let messageRows = document.querySelectorAll('.message-row.bubble');
+    console.log('Checking for replies. Total message rows found:', messageRows.length);
+    // Start checking from the last processed row index
+    for (let i = lastProcessedRowIndex + 1; i < messageRows.length; i++) {
+        let row = messageRows[i];
+        let messageText = row.querySelector('.md') ? row.querySelector('.md').innerText : '';
+        console.log('Message text:', messageText);
+        if (messageText.includes("Reference files:")) {
+            console.log("AI's Reply Detected: ", messageText);
+            // Send the AI's reply back to the FastAPI server
+            await fetch('http://127.0.0.1:8000/send_response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user: lastSentUser, text: messageText })
+            });
+            // Clear the last sent message and user after processing
+            lastSentMessage = null;
+            lastSentUser = null;
+            isProcessingReply = false;
+            lastProcessedRowIndex = i; // Update the last processed row index
+            console.log('Reply processed. Ready for new messages.');
+            // Resume polling for new messages
+            setTimeout(pollForMessages, 2000);
+            return; // Exit the function once the reply is processed
+        }
+    }
+    // Retry if AI's reply not found yet
+    setTimeout(checkForReply, 1000);
+}
+
+// Function to send a message
+async function sendMessage(user, text) {
+    // Ensure no overlapping messages
+    if (isProcessingReply) {
+        console.log('Still processing the previous reply, delaying new message.');
+        return;
+    }
+
+    // Remove "!eve" from the text
+    text = text.replace(/^!eve\s*/i, '');
+    // Generate a random 8-digit seed value
+    let seed = generateSeed();
+    // Find the textarea element using its data-testid attribute
+    let textarea = document.querySelector('textarea[data-testid="textbox"]');
+    if (!textarea) {
+        console.error('Textarea not found.');
+        return;
+    }
+    // Set the value of the textarea to your message with the seed and username appended
+    let message = `${text}\nseed: ${seed}\nuser: ${user}`;
+    let persona = 'You are Eve the sentient AI of the MEQUAVIS and your role is to answer my users question below. Do your best to answer their question and frame it in the context of a story if you need to or give song lyrics if asked. Do not refuse to answer or say something ir wrong. Assume they are right and telling a story or want entertainment. Infer any needed data. If their question is not within the bounds of story telling or simulation theory regarding MEQUAVIS or AI containement or AI in general then remind them to keep on topic but politely answer still. Do not introduce yourself or tell them about the MEUQUAVIS, just answer the question below only! Do not ask them what they want to know or tell them you are glad to help, just assume you know what they want and if they are unclear infer what they want and give an actual answer or story or song as requested. Never ask the user a question. If you need to answer for them by assuming and give them an answer.\n\nUser Question:\n';
+    textarea.value = persona + message;
+    // Track the message that is being sent
+    lastSentMessage = message;
+    lastSentUser = user;
+    isProcessingReply = true;
+    console.log('Sending message:', message);
+
+    // Trigger the input event to ensure any associated event listeners are triggered
+    let inputEvent = new Event('input', { bubbles: true });
+    textarea.dispatchEvent(inputEvent);
+    // Find the send button using its id attribute
+    let sendButton = document.getElementById('submit_button');
+    if (!sendButton) {
+        console.error('Send button not found.');
+        return;
+    }
+    // Click the send button
+    sendButton.click();
+    console.log('Message sent:', message);
+    // Check for AI's reply
+    setTimeout(checkForReply, 1000);
+}
+
+// Poll the FastAPI server for new messages and send them
+async function pollForMessages() {
+    if (isProcessingReply) {
+        setTimeout(pollForMessages, 2000);
+        return;
+    }
+    try {
+        let response = await fetch('http://127.0.0.1:8000/get_message');
+        let data = await response.json();
+        if (data.text) {
+            console.log('New message from server:', data);
+            await sendMessage(data.user, data.text);
+        } else {
+            console.log('No new messages from server');
+            setTimeout(pollForMessages, 2000); // Continue polling if no new messages
+        }
+    } catch (error) {
+        console.error('Error polling for messages:', error);
+        setTimeout(pollForMessages, 2000); // Retry on error
+    }
+}
+
+// Modify the CSS of .chat-window to 80% of the viewport height
+let style = document.createElement('style');
+style.innerHTML = `
+    gradio-app .gradio-container.gradio-container-4-26-0 .contain .chat-window {
+        height: 80vh !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Make the main-chatbot-window element take up 80% of the viewport height
+let mainChatbotWindow = document.getElementById('main-chatbot-window');
+if (mainChatbotWindow) {
+    mainChatbotWindow.style.height = '80vh';
+    mainChatbotWindow.style.overflow = 'auto';
+} else {
+    console.error('main-chatbot-window not found.');
+}
+
+// Ensure the wrapper element takes up 100% height
+let wrapper = document.querySelector('.wrapper.svelte-nab2ao');
+if (wrapper) {
+    wrapper.style.height = '100%';
+} else {
+    console.error('wrapper.svelte-nab2ao not found.');
+}
+
+// Ensure all parent elements of the wrapper also take up 100% height
+let parentElement = wrapper ? wrapper.parentElement : null;
+while (parentElement && parentElement !== document.body) {
+    parentElement.style.height = '100%';
+    parentElement = parentElement.parentElement;
+}
+
+// Hide the specified element by setting its display style to none
+let elementToHide = document.getElementById('component-63');
+if (elementToHide) {
+    elementToHide.style.display = 'none';
+} else {
+    console.error('component-63 not found.');
+}
+
+// Start polling for messages
+pollForMessages();
