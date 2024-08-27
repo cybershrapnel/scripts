@@ -1,0 +1,106 @@
+// ==UserScript==
+// @name         Auto Follow on X (Twitter)
+// @namespace    http://tampermonkey.net/
+// @version      1.5
+// @description  Automatically follow users on https://x.com/mequavis/likes, skipping the first three suggestions and scrolling only half a page at a time.
+// @author       YourName
+// @match        https://x.com/mequavis/likes
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    let tweetIndex = 0;
+    let tweets = [];
+    let failCount = 0;
+    let followTimeout = null; // Declaring followTimeout
+    const maxFails = 50;
+    const scrollTimeout = 2000;
+
+    function observePopupAndClickFollow() {
+        const observer = new MutationObserver((mutations, observerInstance) => {
+            let popupFollowButton = document.querySelector('button[data-testid$="-follow"]');
+            if (popupFollowButton) {
+                clearTimeout(followTimeout); // Clear the timeout to prevent moving to the next tweet
+                popupFollowButton.click();
+                console.log('Clicked follow button!');
+                observerInstance.disconnect(); // Stop observing after the button is clicked
+                failCount = 0;  // Reset fail count on success
+                moveToNextTweet(); // Proceed to the next tweet
+            }
+        });
+
+        // Start observing changes in the document body
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Set a timeout to move to the next tweet if no follow button is found within 5 seconds
+        followTimeout = setTimeout(() => {
+            observer.disconnect(); // Stop observing if no follow button is found
+            console.log('No follow button found. Moving to next tweet.');
+            failCount++;
+            if (failCount >= maxFails) {
+                console.log(`Max retries (${maxFails}) reached. Stopping script.`);
+                return;
+            }
+            moveToNextTweet();
+        }, 5000);
+    }
+
+    function followUserInTweet() {
+        if (tweetIndex >= tweets.length) {
+            console.log('No more tweets found. Scrolling down to load more...');
+            scrollAndReloadTweets();
+            return;
+        }
+
+        let tweet = tweets[tweetIndex];
+        tweet.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Select the user avatar to trigger the popup
+        let avatarElement = tweet.querySelector('div[data-testid^="UserAvatar-Container-"]');
+
+        if (avatarElement) {
+            let userHoverEvent = new MouseEvent('mouseover', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+            avatarElement.dispatchEvent(userHoverEvent);
+
+            // Start observing the popup for the follow button
+            observePopupAndClickFollow();
+        } else {
+            console.log('No avatar found in tweet. Moving to next tweet.');
+            moveToNextTweet();
+        }
+    }
+
+    function moveToNextTweet() {
+        tweetIndex++;
+        setTimeout(followUserInTweet, 1000); // Move to the next tweet after 1 second
+    }
+
+    function scrollAndReloadTweets() {
+        window.scrollBy(0, window.innerHeight / 2); // Scroll down by half a screen height
+
+        setTimeout(() => {
+            tweets = Array.from(document.querySelectorAll('article[role="article"]')).slice(3); // Skip the first three suggestions
+            if (tweetIndex >= tweets.length) {
+                console.log('Still no new tweets loaded. Trying again...');
+                scrollAndReloadTweets(); // Try scrolling again if no new tweets are found
+            } else {
+                console.log('New tweets loaded. Resuming...');
+                followUserInTweet(); // Resume the process after loading more tweets
+            }
+        }, scrollTimeout); // Wait 2 seconds for tweets to load after scrolling
+    }
+
+    // Initial setup
+    setTimeout(() => {
+        console.log('Starting script...');
+        tweets = Array.from(document.querySelectorAll('article[role="article"]')).slice(3); // Skip the first three suggestions
+        followUserInTweet(); // Start processing tweets
+    }, 10000); // Wait 10 seconds before starting to allow the page to load
+
+})();
