@@ -1,0 +1,114 @@
+let clickCount = 0;
+let totalLikes = 0;
+let maxClicks = getRandomTime(13, 50);
+let attempts = 0;
+let bigBreakCount = 0;
+let intervalId;
+
+function getRandomTime(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function clickRandomLikeButton() {
+    if (clickCount >= maxClicks) {
+        totalLikes += clickCount;
+
+        if (totalLikes > 500) {
+            bigBreakCount++;
+            let breakTime;
+
+            if (bigBreakCount % 7 === 0) {
+                breakTime = 3 * 60 * 60 * 1000;
+                console.log(`Reached ${totalLikes} total likes. Taking a 3-hour break (Big Break #${bigBreakCount})...`);
+            } else {
+                breakTime = 45 * 60 * 1000;
+                console.log(`Reached ${totalLikes} total likes. Taking a 45-minute break (Big Break #${bigBreakCount})...`);
+            }
+
+            totalLikes = 0;
+            clickCount = 0;
+            clearInterval(intervalId);
+
+            setTimeout(() => {
+                console.log('Break over. Resuming clicks...');
+                maxClicks = getRandomTime(13, 50);
+                startInterval();
+            }, breakTime);
+        } else {
+            const breakTime = getRandomTime(180, 720) * 1000;
+            console.log(`Reached ${maxClicks} clicks. Taking a break for ${breakTime / 60000} minutes...`);
+            clearInterval(intervalId);
+
+            setTimeout(() => {
+                console.log('Break over. Resuming clicks...');
+                clickCount = 0;
+                maxClicks = getRandomTime(13, 50);
+                startInterval();
+            }, breakTime);
+        }
+
+        return;
+    }
+
+    const likeButtons = document.querySelectorAll('button[data-testid="like"]');
+
+    if (likeButtons.length > 0) {
+        const randomIndex = Math.floor(Math.random() * likeButtons.length);
+        const likeButton = likeButtons[randomIndex];
+
+        const likeCountElement = likeButton.closest('div').querySelector('span.css-1jxf684');
+
+        if (likeCountElement) {
+            let likeCountText = likeCountElement.textContent.trim();
+            let likeCount = convertLikeCountToNumber(likeCountText);
+
+            if (likeCount < 12) {
+                likeButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                likeButton.click();
+                console.log(`Clicked a like button with ${likeCount} likes: ${clickCount + 1} of ${maxClicks}`);
+                clickCount++;
+                attempts = 0;
+            } else {
+                console.log(`Skipped a like button with ${likeCount} likes. Scrolling down and trying next one after a short delay.`);
+                window.scrollBy(0, window.innerHeight / 2); // Scroll down by half a screen height
+                setTimeout(clickRandomLikeButton, 200); // Delay before retrying
+            }
+        } else {
+            console.log('No like count element found. Skipping and scrolling down...');
+            window.scrollBy(0, window.innerHeight / 2); // Scroll down by half a screen height
+            setTimeout(clickRandomLikeButton, 200); // Delay before retrying
+        }
+    } else {
+        console.log(`No like buttons found on the page. Attempt: ${attempts + 1} of 50`);
+        attempts++;
+
+        if (attempts >= 50) {
+            console.log('50 attempts with no like button found. Jumping back to the top of the page.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            attempts = 0;
+        } else {
+            if (attempts === 1) {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            } else {
+                window.scrollBy(0, window.innerHeight);
+            }
+        }
+    }
+}
+
+function convertLikeCountToNumber(likeCountText) {
+    if (likeCountText.endsWith('K')) {
+        return parseFloat(likeCountText) * 1000;
+    } else if (likeCountText.endsWith('M')) {
+        return parseFloat(likeCountText) * 1000000;
+    } else {
+        return parseInt(likeCountText.replace(',', ''), 10);
+    }
+}
+
+function startInterval() {
+    const randomInterval = getRandomTime(20, 65) * 1000;
+    intervalId = setInterval(clickRandomLikeButton, randomInterval);
+}
+
+startInterval();
