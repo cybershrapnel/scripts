@@ -62,7 +62,7 @@ function clickRandomLikeButton() {
             let likeCountText = likeCountElement.textContent.trim();
             let likeCount = convertLikeCountToNumber(likeCountText);
 
-            if (likeCount < 12) {
+            if (likeCount < 4) {
                 likeButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 likeButton.click();
                 console.log(`Clicked a like button with ${likeCount} likes: ${clickCount + 1} of ${maxClicks}`);
