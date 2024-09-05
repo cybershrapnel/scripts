@@ -1,0 +1,216 @@
+let postIndex = 0;
+let attempts = 0;
+const maxAttempts = 1;
+const maxFollowerCount = 999;
+const hoverRetryDelay = 3000;
+const autoClickDelay = 2 * 60 * 1000; // 2 minutes
+const followDelay = 60 * 1000; // 1 minute delay before following
+let isProcessing = false;
+const processedUsers = new Set();
+const skippedUsers = new Set();
+
+function processPost() {
+    if (isProcessing) return;
+    isProcessing = true;
+
+    const posts = document.querySelectorAll('article[role="article"]');
+
+    if (postIndex >= posts.length) {
+        console.log('No more posts found. Scrolling down to load more...');
+        scrollAndReloadPosts();
+        return;
+    }
+
+    const post = posts[postIndex];
+    post.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    setTimeout(() => {
+        checkLikeCount(post);
+    }, 100);
+}
+
+function checkLikeCount(post) {
+    const likeButton = post.querySelector('button[data-testid="like"]');
+    const likeCountElement = likeButton ? likeButton.closest('div').querySelector('span.css-1jxf684') : null;
+
+    if (likeButton && likeCountElement) {
+        let likeCountText = likeCountElement.textContent.trim();
+        let likeCount = convertTextToNumber(likeCountText);
+
+        if (isNaN(likeCount)) {
+            console.log(`Assuming 0 likes since the like count is NaN. Proceeding...`);
+            likeCount = 0;
+        }
+
+        if (likeCount < 4) {
+            console.log(`Post has ${likeCount} likes. Checking follow status...`);
+            checkUserNameAndProceed(post);
+        } else {
+            console.log(`Skipped post with ${likeCount} likes.`);
+            moveToNextPost();
+        }
+    } else {
+        console.log('No like button or like count found. Skipping post.');
+        moveToNextPost();
+    }
+}
+
+function checkUserNameAndProceed(post) {
+    const userNameElement = post.querySelector('a[role="link"][href^="/"]');
+    if (userNameElement) {
+        const userName = userNameElement.getAttribute('href').substring(1);
+
+        if (processedUsers.has(userName) || skippedUsers.has(userName)) {
+            console.log(`Skipped post by ${userName}, already processed or skipped.`);
+            moveToNextPost();
+        } else {
+            triggerAvatarHover(post);
+        }
+    } else {
+        console.log('No username found. Skipping post.');
+        moveToNextPost();
+    }
+}
+
+function triggerAvatarHover(post) {
+    const avatarElement = post.querySelector('div[data-testid^="UserAvatar-Container-"]');
+
+    if (avatarElement) {
+        let userHoverEvent = new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        });
+        avatarElement.dispatchEvent(userHoverEvent);
+
+        setTimeout(() => {
+            checkFollowerCount(post);
+        }, hoverRetryDelay);
+    } else {
+        console.log('No avatar found for post. Moving to next post.');
+        moveToNextPost();
+    }
+}
+
+function checkFollowerCount(post) {
+    attempts++;
+
+    let popupLinks = document.querySelectorAll('a[role="link"]');
+    let followerCountFound = false;
+
+    popupLinks.forEach(link => {
+        if (link.textContent.includes('Followers')) {
+            let followerCountText = link.textContent.trim().split(' ')[0];
+            let followerCount = convertTextToNumber(followerCountText);
+
+            const userNameElement = post.querySelector('a[role="link"][href^="/"]');
+            if (userNameElement) {
+                const userName = userNameElement.getAttribute('href').substring(1);
+
+                if (followerCount <= maxFollowerCount) {
+                    const likeButton = post.querySelector('button[data-testid="like"]');
+                    const followButton = document.querySelector('button[data-testid$="-follow"]');
+                    const followingButton = document.querySelector('button[data-testid$="-unfollow"]');
+
+                    if (!followingButton && followButton) { // If not already following
+                        console.log(`Waiting 1 minute before following user ${userName}...`);
+                        setTimeout(() => {
+                            followButton.click(); // Follow the user
+                            console.log(`Followed user ${userName} with ${followerCount} followers.`);
+                            if (likeButton) {
+                                highlightLikeButton(likeButton, userName);
+                            }
+                        }, followDelay);
+                    } else if (followingButton) {
+                        console.log(`User is already followed. Skipping post.`);
+                        moveToNextPost();
+                    } else {
+                        console.log(`No follow button found for user ${userName}. Skipping post.`);
+                        moveToNextPost();
+                    }
+                } else {
+                    console.log(`Skipped post by ${userName} with ${followerCount} followers.`);
+                    processedUsers.add(userName);
+                    moveToNextPost();
+                }
+
+                followerCountFound = true;
+                attempts = 0;
+            }
+        }
+    });
+
+    if (!followerCountFound) {
+        if (attempts >= maxAttempts) {
+            console.log('Max attempts to find follower count reached. Moving to next post.');
+            moveToNextPost();
+        } else {
+            console.log(`No follower count found on attempt ${attempts}. Retrying hover...`);
+            triggerAvatarHover(post);
+        }
+    }
+}
+
+function highlightLikeButton(likeButton, userName) {
+    likeButton.style.backgroundColor = 'yellow';
+    console.log(`Highlighted like button for ${userName}. Waiting for manual click...`);
+
+    let autoClickTimeout = setTimeout(() => {
+        console.log(`Auto-clicked like button for ${userName} after 10 minutes.`);
+        likeButton.click();
+        moveToNextPost();
+    }, autoClickDelay);
+
+    const observer = new MutationObserver((mutations, observerInstance) => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-testid' && mutation.target.getAttribute('data-testid') !== 'like') {
+                console.log(`Like button clicked for ${userName}. Proceeding...`);
+                clearTimeout(autoClickTimeout);
+                observerInstance.disconnect();
+                moveToNextPost();
+            }
+        });
+    });
+
+    observer.observe(likeButton, { attributes: true });
+
+    document.addEventListener('contextmenu', function onRightClick(event) {
+        event.preventDefault();
+        console.log(`Right-click detected. Skipping post by ${userName}.`);
+        skippedUsers.add(userName);
+        clearTimeout(autoClickTimeout);
+        observer.disconnect();
+        document.removeEventListener('contextmenu', onRightClick);
+        moveToNextPost();
+    });
+}
+
+function moveToNextPost() {
+    postIndex++;
+    isProcessing = false;
+    setTimeout(processPost, 100);
+}
+
+function scrollAndReloadPosts() {
+    window.scrollTo(0, document.body.scrollHeight);
+
+    setTimeout(() => {
+        postIndex = 0;
+        isProcessing = false;
+        processPost();
+    }, 3000);
+}
+
+function convertTextToNumber(text) {
+    if (!text || text === '') return NaN;
+
+    if (text.endsWith('K')) {
+        return parseFloat(text) * 1000;
+    } else if (text.endsWith('M')) {
+        return parseFloat(text) * 1000000;
+    } else {
+        return parseInt(text.replace(/[^0-9]/g, ''), 10);
+    }
+}
+
+processPost();
