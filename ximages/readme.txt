@@ -12,3 +12,5 @@ Just log into your desired account and it should do the rest automatically. Post
 added a v2 script that has more prompting options.
 
 added a make video script that takes your posted images and makes a video with a song every 15 minutes and posts to a community.
+
+fyi, the chromium script uses chromium, it can not upload video but can upload images. the makevideo script uses firefox and it can upload video.
