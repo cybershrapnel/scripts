@@ -14,6 +14,97 @@ const basePrompts = [
     'pinup girl with red head long hair pig tails, in a vintage dress with floral strawberry print, wearing sunglasses and holding a sign that says NanoCheeZe, red lipstick, nose ring, belly ring'
 ];
 
+const POVsetting = [
+    '',
+    'as a box art for a video game: ',
+    'as a movie poster: ',
+    'as a movie poster displayed in a theatre: ',
+    'illustrate as a book: ',
+    'as an artful harcover book cover: ',
+    'displayed on an old 80s TV in a living room: ',
+    'on a TV screen: ',
+    'at fractal sea aboard the burning ship: ',
+    'with superpowers: ',
+    'while flying: ',
+    'while swimming: ',
+    'while diving: ',
+    'while sailing: ',
+    'as a board game displayed in the box: ',
+    'as a board game on display and in play: ',
+    'in an animal universe: ',
+    'in dog universe: ',
+    'in duck universe: ',
+    'in cat universe: ',
+    'in a mouse universe: ',
+    'with cat ears and a tail: ',
+    'with glowing red eyes: ',
+    'with red eyes: ',
+    'in a render of the simulation: ',
+    'on the moon: ',
+    'in space: ',
+    'on flat earth: ',
+    'as a news caster on the news doing a special report: ',
+    'running for safety: ',
+    'driving a car: ',
+    'as a spaceship: ',
+    'as an arcade machine: ',
+    'as a DVD movie box art: ',
+    'as a VHS movie box art: ',
+    'as a music CD album cover art: ',
+    'as a vinyle record album cover art: ',
+    'as a youtube video highlight screenshot: ',
+    'as a screenshot of a tweet: ',
+    'as a movie ad on amazon prime video: ',
+    'as a screenshot of a facebook post: ',
+    'as a wikipedia page screenshot: ',
+    'as a reddit page post screenshot: ',
+    'as a disney movie box art: ',
+    'as a magazine cover: ',
+    'as a comic book cover: ',
+    'as a page in a comic book: ',
+    'as a scene in a random movie: ',
+    'in imaginationland: ',
+    'in cyberspace: ',
+    'in vectorspace: ',
+    'in subspace: ',
+    'in hyperspace: ',
+    'in thirdspace: ',
+    'in vexspace: ',
+    'in fractal space: ',
+    'in abstract space: ',
+    'as a cassette tape next to its case: ',
+    'as a CD next to its case: ',
+    'as a VHS tape next to its case: ',
+    'as a vinyl record out of the sleeve: ',
+    'meeting random famous person: ',
+    'meeting aliens: ',
+    'fighting aliens: ',
+    'partying with aliens: ',
+    'as a theatrical broadway play: ',
+    'as a scene from the battlefield of the future: ',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    ];
+
+window.addEventListener('beforeunload', function (e) {
+    // Cancel the event as stated by the standard.
+    e.preventDefault();
+    // Chrome requires returnValue to be set.
+    e.returnValue = '';
+});
+
+
 // Function to randomly replace 'NanoCheeZe' with 'MEQUAVIS' or 'Hybrid Tales'
 function replaceNanoCheeze(prompt) {
     const options = ['NanoCheeZe', 'NanoCheeZe', 'NanoCheeZe', 'NCZ', 'MEQUAVIS', 'Hybrid Tales'];
@@ -21,7 +112,17 @@ function replaceNanoCheeze(prompt) {
     return prompt.replace('NanoCheeZe', replacement);
 }
 
-// Function to randomly select a base prompt (1 out of 5 times)
+// Function to randomly select a base pre prompt (1 out of 2 times)
+function getBase() {
+       if (Math.random() <= 0.5) { // 50% chance to change the base prompt
+        const randomIndex = Math.floor(Math.random() * POVsetting.length);
+        return POVsetting[randomIndex];
+       } else {
+        return POVsetting[0]; // Default base prompt
+    }
+}
+
+// Function to randomly select a base prompt (1 out of 2 times)
 function getRandomBasePrompt() {
     if (Math.random() <= 0.5) { // 50% chance to change the base prompt
         const randomIndex = Math.floor(Math.random() * basePrompts.length);
@@ -51,7 +152,7 @@ function getRandomBasePrompt() {
     // Generate the base prompt
     let basePrompt = getRandomBasePrompt();
     basePrompt = replaceNanoCheeze(basePrompt);
-
+    basePrompt=getBase()+basePrompt;
     console.log('Generated Prompt:', basePrompt);
 
     // Lists of extra sentences
