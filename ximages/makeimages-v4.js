@@ -1,3 +1,4 @@
+//Grokinator image generator script for debug console entry
 //attempting to remove the stupid banner that sometimes show with info under the image as it crashes the script. I can't get it, this should work if I can get the css idenitified... but this isn't it yet. the method is right but the identifier is wrong. working on it. it happens so rarely it's hard to debug.
 
 // Run in console of browser on grok page, press ctrl shift and i to open console, will ask for permission to copy paste into console if you have never done it before. must type what it says first, one time only.
@@ -2293,7 +2294,7 @@ const extraList5 = [
     }
 
     // Function to process the image at a specific index from the end
-    function processImage(imageIndex = 5) {
+    function processImage(imageIndex = 1) { //use to be 5, they changed it so its the first element now
         console.log(`Processing the image at index images.length - ${imageIndex}...`);
 removeTargetElements();
         const images = document.querySelectorAll('img');
