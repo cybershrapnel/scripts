@@ -2,13 +2,13 @@
 document.addEventListener('keydown', function(event) {
     // Check if the 'z' key was pressed
     if (event.key === 'z' || event.key === 'Z') {
-        // Simulate typing the contributor name "Kenneth Erkel Thorson" (2nd contributor)
+        // Simulate typing the contributor name (2nd contributor)
         const contributorNameInput = document.querySelector('input[name="contributors.1.name"]');
         if (contributorNameInput) {
             contributorNameInput.focus();
             contributorNameInput.value = "";
             contributorNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-            contributorNameInput.value = "Kenneth Erkel Thorson";
+            contributorNameInput.value = "Your Name";
             contributorNameInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
