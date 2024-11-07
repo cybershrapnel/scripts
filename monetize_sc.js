@@ -1,7 +1,7 @@
 (async function automateMonetization() {
-    // Specify the title of the track to start with
+    // Specify the title of the track to start with and does not process starting track
     const startingTrackTitle = "Virtual Stars Recover Persona Remix 2".toLowerCase();
-    // Specify the title of the track to stop at
+    // Specify the title of the track to stop at or use a track that doesn't exist to process all
     const stopTrackTitle = "Ghost in thejfjfjfj Code".toLowerCase();
 
     // List of phrases to skip (all converted to lowercase for case-insensitive comparison)
