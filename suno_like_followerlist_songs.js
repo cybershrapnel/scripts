@@ -1,4 +1,5 @@
 // Function to click unliked buttons with a delay and repeat every 2 minutes
+//use on https://suno.com/feed
 function clickUnlikedButtons(delay) {
     // Select all buttons with the specified aria-label
     const buttons = document.querySelectorAll('button[aria-label="Playbar: Like"]');
