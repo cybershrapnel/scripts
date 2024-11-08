@@ -84,7 +84,12 @@ function processItem(index = 0) {
                     }
                 }, 1000); // Adjust delay as needed
             } else {
-                console.error("Edit details button not found.");
+                console.log(`Skipping item ${index + 1}: No "Edit details" button found (likely removed).`);
+
+                // Move to the next item
+                setTimeout(() => {
+                    processItem(index + 1); // Process next item
+                }, 500); // Wait briefly before moving to the next item
             }
         }, 1000); // Adjust delay as needed
     } else {
