@@ -1,0 +1,90 @@
+(function() {
+    let lastPlayedSong = null; // To avoid duplicate downloads for the same song
+    const delayBeforeDownload = 5000; // Delay to ensure the correct image loads
+
+    // Function to apply CSS changes to #playSongPopup and #closePopupButton
+    function applyCustomStyles() {
+        const playSongPopup = document.getElementById('playSongPopup');
+        if (playSongPopup) {
+            playSongPopup.style.display = 'block';
+            playSongPopup.style.position = 'fixed';
+            playSongPopup.style.top = '65%';
+            playSongPopup.style.left = '70%';
+            playSongPopup.style.transform = 'translate(-50%, -50%)';
+            playSongPopup.style.backgroundColor = 'transparent';
+            playSongPopup.style.padding = '0px';
+            playSongPopup.style.borderRadius = '8px';
+            playSongPopup.style.boxShadow = 'rgba(0, 0, 0, 0.5) 0px 0px 10px';
+            playSongPopup.style.textAlign = 'center';
+            playSongPopup.style.zIndex = '10000';
+            playSongPopup.style.width = '80%';
+            playSongPopup.style.maxWidth = '600px';
+        }
+
+        const closePopupButton = document.getElementById('closePopupButton');
+        if (closePopupButton) {
+            closePopupButton.style.position = 'absolute';
+            closePopupButton.style.top = '10px';
+            closePopupButton.style.right = '10px';
+            closePopupButton.style.cursor = 'pointer';
+            closePopupButton.style.fontSize = '24px';
+            closePopupButton.style.background = 'none';
+            closePopupButton.style.border = 'none';
+            closePopupButton.style.color = 'white';
+            closePopupButton.style.zIndex = '0';
+        }
+    }
+
+    // Apply styles once initially
+    applyCustomStyles();
+
+    // Monitor audio element for playback start
+    const audio = document.getElementById('audio');
+    if (!audio) {
+        console.error('Audio element not found.');
+        return;
+    }
+
+    audio.addEventListener('play', () => {
+        applyCustomStyles(); // Reapply styles to ensure they're set when playback starts
+
+        // Identify the highlighted song
+        const selectedSong = document.querySelector('#songList .selected');
+        if (selectedSong) {
+            const songName = selectedSong.textContent.trim();
+            console.log('Now Playing:', songName);
+
+            if (songName !== lastPlayedSong) {  // Avoid duplicate downloads
+                lastPlayedSong = songName;
+
+                // Wait 5 seconds before downloading the image
+                setTimeout(async () => {
+                    const popupImage = document.getElementById('popupImage');
+
+                    // Check if the image has loaded by verifying its source
+                    if (popupImage && popupImage.complete && popupImage.src) {
+                        try {
+                            const imgResponse = await fetch(popupImage.src);
+                            const imgBlob = await imgResponse.blob();
+
+                            // Create a temporary link to download the image with 'M_' prefix
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(imgBlob);
+                            link.download = `M_${songName}.png`; // Add 'M_' prefix to the filename
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            console.log('Popup image saved to Downloads folder with M_ prefix.');
+                        } catch (error) {
+                            console.error('Failed to save popup image:', error);
+                        }
+                    } else {
+                        console.error('Popup image not found or not fully loaded.');
+                    }
+                }, delayBeforeDownload);  // Delay before downloading
+            }
+        } else {
+            console.error('No song is highlighted as currently playing.');
+        }
+    });
+})();
