@@ -15,19 +15,26 @@ songs.forEach(song => {
         // Locate the container element for the song
         const parent = song.closest('.relative.flex.flex-col'); // Adjust selector to match the structure
 
-        // Find the author element
+        // Find the author element for the author's display name
         const authorElement = parent?.querySelector('span[title]'); // Adjust to target the author span
-        const author = authorElement ? authorElement.textContent.trim() : 'Unknown Author';
+        const authorName = authorElement ? authorElement.textContent.trim() : 'Unknown Author';
 
-        songList.push({ title, uuid, author });
+        // Find the author's link to extract the username
+        const authorLinkElement = parent?.querySelector('a[href^="/@"]'); // Adjust to target the author's link
+        const authorLink = authorLinkElement?.getAttribute('href') || '';
+        const usernameMatch = authorLink.match(/@([\w\d-]+)/); // Extract username from the @ link
+        const username = usernameMatch ? usernameMatch[1] : '';
+
+        // Add the song to the list
+        songList.push({ title, uuid, author: authorName, user: username });
     }
 });
 
 // Output the results
 console.clear();
-console.log('Title - UUID - Author');
-songList.forEach(({ title, uuid, author }) => {
-    console.log(`${title} - ${uuid} - ${author}`);
+console.log('Title - UUID - Author - Username');
+songList.forEach(({ title, uuid, author, user }) => {
+    console.log(`${title} - ${uuid} - ${author} - ${user}`);
 });
 
 // If needed, log the raw array
