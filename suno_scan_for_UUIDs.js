@@ -19,8 +19,8 @@ songs.forEach(song => {
 console.clear();
 console.log('Title - UUID');
 songList.forEach(({ title, uuid }) => {
-    console.log(`${title} - ${uuid}`);
+    //console.log(`${uuid}`) - ${title}`);
 });
 
 // If needed, log the raw array
-// console.log(songList);
+console.log(songList);
