@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Chunk Player</title>
+</head>
+<body>
+    <h1>MP3 Chunk Combiner and Player</h1>
+    <button id="play">Play Audio</button>
+    <audio id="audio" controls></audio>
+
+    <script>
+        document.getElementById('play').addEventListener('click', async () => {
+            const m3uUrl = 'https://cf-hls-media.sndcdn.com/playlist/ObsRS0bvDNQK.128.mp3/playlist.m3u8?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLWhscy1tZWRpYS5zbmRjZG4uY29tL3BsYXlsaXN0L09ic1JTMGJ2RE5RSy4xMjgubXAzL3BsYXlsaXN0Lm0zdTgqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzMyMTQzMTYzfX19XX0_&Signature=EbONbr~zI3ET6VeX-cRAhbbpWe0ziJgL8-hMt86I1w0P0MMAv6QSwZ6Hi3SE5lMl5Jz5GO2BAm5oICLMcjrvgWJwbYuWbICE9yiHuyWF~yS2LSO0ehhLs3OGmZhgl857zu5rRD71DoP0Tb20PZ8GXWwZL29uy8B0IbEySQHnwykMOPF3ECHV43jLUVU~Gw3fn3E6ecOiuTwHsS0j~XFPGXlRBYZVrlvhY4Jmqwke96sSWsrfVM9FALJdggjIoM8d2B8Nc4A5ladkiXjpBiOIAzdtCmyUGUBi2-kKbxC3MkvQGuYURKpDm~bV6Ac0I2YXhcnxhJX2moLl4Azttf7suw__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ';
+
+            const audioElement = document.getElementById('audio');
+
+            try {
+                // Fetch the M3U file
+                const m3uResponse = await fetch(m3uUrl);
+                if (!m3uResponse.ok) {
+                    throw new Error(`Failed to fetch M3U file: ${m3uResponse.status}`);
+                }
+                const m3uText = await m3uResponse.text();
+
+                // Parse the M3U file for chunk URLs
+                const chunkUrls = m3uText
+                    .split('\n')
+                    .filter(line => line && !line.startsWith('#')); // Filter out metadata and comments
+
+                // Download each chunk as a blob
+                const blobs = await Promise.all(chunkUrls.map(async (url) => {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch chunk: ${response.status}`);
+                    }
+                    return await response.blob();
+                }));
+
+                // Combine blobs into one
+                const combinedBlob = new Blob(blobs, { type: 'audio/mp3' });
+
+                // Create an object URL for the combined blob
+                const audioUrl = URL.createObjectURL(combinedBlob);
+                audioElement.src = audioUrl;
+
+                // Play the audio
+                audioElement.play();
+            } catch (error) {
+                console.error('Error fetching or playing audio:', error);
+            }
+        });
+    </script>
+</body>
+</html>
