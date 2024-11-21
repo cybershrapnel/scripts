@@ -1,3 +1,16 @@
+//run this script from browser console on an artists tracks page.
+//before running I suggest hovering over any items real quick on the right panel and the song listed in the media player.
+//if you don't they can accidentally get triggered during the script and the wrong song may get applied to a title.
+//Also scroll down as far as you want the script to download to prior to running the script
+//This will walk through every enabled play button and download the mp3 even if downloads are disabled for the track.
+//This script is for educational purposes and to serve as my resume for SoundCloud so they know I actually understand their backend
+//And this was all done with the help of AI and a few hours and no knowledge of how the system works.
+//Soundcloud breaks up every song into ~9 second long mp3s that it servers the user via an authorized chunking system served via a M3U file that acts as a playlist for the chunks to be streamed together
+//This script utilizes the authorization granted by your browser hovering over the link and then downloads the m3u as a blob
+//it then downloads the blob with the proper artist name and song
+//Do not abuse this. I will be deleting this. Nobody looks at my scripts anyways so I doubt anyone will ever try it or use it.
+//Again this is to serve as my resume withj Soundcloud.
+
 // Track the last detected M3U URL
 let lastSeenM3U = null;
 
