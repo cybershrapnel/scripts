@@ -139,6 +139,65 @@ function downloadBlob(blob, filename) {
 }
 
 // Periodically check for the currently playing song
-setInterval(updateCurrentPlayingSong, 1000);
+setInterval(updateCurrentPlayingSong, 300);
 
 console.log("Script initialized. Hover over playlists to detect M3U URLs and ensure a song is playing.");
+
+
+(function hoverAndClickPlayButtons() {
+    // Get all play button containers, skipping disabled ones
+    const playButtons = Array.from(document.querySelectorAll('.soundTitle__playButton a.sc-button-play'))
+        .filter((button) => !button.classList.contains('sc-button-disabled')); // Skip disabled buttons
+
+    if (playButtons.length === 0) {
+        console.log("No enabled play buttons found on the page.");
+        return;
+    }
+
+    console.log(`Found ${playButtons.length} enabled play buttons. Starting hover and click simulation.`);
+
+    // Get the "next" button
+    const nextButton = document.querySelector('.playControls__next');
+    if (!nextButton) {
+        console.error("Next button not found on the page.");
+        return;
+    }
+
+    // Initialize play button counter
+    let remainingButtons = playButtons.length;
+
+    // Function to hover over a button and perform actions
+    async function hoverAndClick(button, index) {
+        console.log(`Simulating hover on button ${index + 1}/${playButtons.length}. Remaining: ${remainingButtons}`);
+
+        // Simulate hover event
+        const hoverEvent = new Event('mouseover', { bubbles: true });
+        button.dispatchEvent(hoverEvent);
+
+        // Wait for 1 second before the next action
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        if (index === 0) {
+            // First button: Click the play button itself
+            console.log(`Clicking the first play button: ${index + 1}/${playButtons.length}`);
+            const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+            button.dispatchEvent(clickEvent);
+        } else {
+            // Subsequent buttons: Click the "next" button
+            console.log(`Clicking the next button for button ${index + 1}/${playButtons.length}.`);
+            const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+            nextButton.dispatchEvent(clickEvent);
+        }
+
+        // Decrement the counter and stop when no buttons remain
+        remainingButtons -= 1;
+        if (remainingButtons === 0) {
+            console.log("All play buttons have been processed.");
+        }
+    }
+
+    // Iterate over all play buttons and simulate actions
+    playButtons.forEach((button, index) => {
+        setTimeout(() => hoverAndClick(button, index), index * 2000); // Space out each interaction by 2 seconds
+    });
+})();
