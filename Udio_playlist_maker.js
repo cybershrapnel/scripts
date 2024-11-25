@@ -11,12 +11,13 @@ function extractMediaInfo() {
         const artist = mediaPlayer.querySelector("p")?.textContent?.trim() || "Unknown Artist";
         const audioSrc = mediaPlayer.querySelector("audio")?.getAttribute("src") || "Unknown URL";
         const songImage = mediaPlayer.querySelector("img")?.getAttribute("src") || "Unknown Image";
+        const songUrl = mediaPlayer.querySelector('a[href^="/songs"]')?.getAttribute("href") || "Unknown Song URL";
 
         return {
             title: songTitle,
-            uuid: audioSrc,
+            uuid: audioSrc, // Using audio URL as the UUID
             author: artist,
-            user: artist, // Using artist as user
+            user: songUrl.replace("/songs/", ""), // Use the song-specific URL (stripped) as the user
             image: songImage,
             profile: "https://cdn1.suno.ai/default-profile.webp" // Placeholder profile image
         };
