@@ -7,8 +7,8 @@ import time
 
 # Configuration
 RPC_URL = "http://127.0.0.1:15782"
-RPC_USER = "nanocheeze"
-RPC_PASS = "ncz"
+RPC_USER = "user"
+RPC_PASS = "pass"
 
 # Global variable to track hashes
 hash_count = multiprocessing.Value('i', 0)
