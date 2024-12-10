@@ -1141,6 +1141,13 @@ var i=0;
     function startAutomation() {
         var textarea = document.querySelector('textarea[placeholder="Ask anything"]');
 
+    // Generate the base prompt
+    basePrompt = getRandomBasePrompt();
+    basePrompt = replaceNanoCheeze(basePrompt);
+    basePrompt=getBase()+basePrompt;
+    console.log('Generated Prompt:', basePrompt);
+
+        
         if (!textarea) {
             console.error('Textarea not found!');
             setTimeout(() => {
