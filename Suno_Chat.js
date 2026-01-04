@@ -1,3 +1,5 @@
+//I moved this to it's own project at https://github.com/cybershrapnel/Suno_Chat
+
 // ==UserScript==
 // @name         Suno Chat Mirror (movable + resizable + rooms + blocklist + send)
 // @namespace    ncz-mequavis
