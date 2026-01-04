@@ -677,6 +677,17 @@
     }
   });
 
+// Insert Word Joiner (U+2060) before ".com" to break auto-linking
+const WORD_JOINER = "\u2060";
+
+function obfuscateDotCom(text) {
+  return String(text || "").replace(
+    /([A-Za-z0-9])\.(com)\b/gi,
+    (_m, pre, tld) => `${pre}${WORD_JOINER}.${tld}`
+  );
+}
+
+
   // Mirrored send logic
   function sendFromMirror() {
     const st = loadState();
@@ -687,10 +698,14 @@
     const text = raw.trim();
     if (!text) return;
 
+    // Obfuscate .com domains (e.g., suno.com -> suno\u2060.com)
+    const safeText = obfuscateDotCom(text);
+
     const mainInput = findMainChatInput();
     if (!mainInput) return;
 
-    const msgToSend = (activeRoom > 0) ? `${prefix} ${text}` : text;
+    //const msgToSend = (activeRoom > 0) ? `${prefix} ${text}` : text;
+    const msgToSend = (activeRoom > 0) ? `${prefix} ${safeText}` : safeText;
 
     mainInput.focus();
     setNativeValue(mainInput, msgToSend);
