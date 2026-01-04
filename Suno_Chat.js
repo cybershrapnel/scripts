@@ -373,6 +373,13 @@
       white-space:nowrap;
     }
     #ncz-chat-mirror-host .ncz-sendBtn:hover { background:rgba(255,255,255,0.16); }
+/* add readable gap between username and message text in the mirror */
+#ncz-chat-mirror-host a[href^="/@"],
+#ncz-chat-mirror-host span.font-medium{
+  margin-right: 6px !important;
+  display: inline-block;
+}
+
   `;
   document.documentElement.appendChild(style);
 
