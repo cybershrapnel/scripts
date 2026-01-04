@@ -1056,18 +1056,23 @@
       if (!force && now === routeActive) return;
 
       // transition
-      if (!routeActive && now) {
-        routeActive = true;
-        applyVisibility();
-        startMirroring();
-      } else if (routeActive && !now) {
-        routeActive = false;
-        applyVisibility();
-        stopMirroring();
-      } else {
-        routeActive = now;
-        applyVisibility();
-      }
+if (!routeActive && now) {
+  routeActive = true;
+
+  // NEW: entering /live-radio always re-opens the mirror even if user closed it
+  hidden = false;
+
+  applyVisibility();
+  startMirroring();
+} else if (routeActive && !now) {
+  routeActive = false;
+  applyVisibility();
+  stopMirroring();
+} else {
+  routeActive = now;
+  applyVisibility();
+}
+
     }
 
     window.addEventListener("ncz-locationchange", () => onRouteMaybeChanged(true));
