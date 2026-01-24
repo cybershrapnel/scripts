@@ -19,7 +19,7 @@
   // ✅ PERSISTENT "MOVED" MEMORY (3-hour window)
   // ─────────────────────────────────────────────────────────────
   const STORAGE_KEY = '__ncz_moved_authors_ts_v1__';
-  const IGNORE_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
+  const IGNORE_WINDOW_MS = 24 * 60 * 60 * 1000; // 3 hours
 
   function loadMovedMap() {
     try {
@@ -274,7 +274,7 @@
   }
 
   document.addEventListener('keydown', e => {
-    if (e.code !== 'Space') return;
+    if (e.code !== 'KeyA') return;
 
     const now = Date.now();
     if (now - lastRun < COOLDOWN_MS) return;
