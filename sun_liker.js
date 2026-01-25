@@ -762,3 +762,44 @@
 })();
 
 
+
+
+(() => {
+  // Refresh if this exact error text appears anywhere on the page
+  const ERROR_TEXT = "An error has occurred. Please try refreshing the page.";
+  const CHECK_EVERY_MS = 10_000;
+
+  console.log("🕵️ Error-watch refresh script loaded");
+  console.log("⏱ Checking every", CHECK_EVERY_MS / 1000, "seconds for:", ERROR_TEXT);
+
+  function pageHasErrorText() {
+    // Fast + simple: check visible text
+    const bodyText = document.body?.innerText || "";
+    return bodyText.includes(ERROR_TEXT);
+  }
+
+  function checkAndRefresh() {
+    try {
+      if (pageHasErrorText()) {
+        console.log("🚨 Detected error message — refreshing now...");
+        location.reload();
+      } else {
+        console.log("✅ No error detected at", new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.log("⚠️ Error during check:", err);
+    }
+  }
+
+  // Run immediately, then every 10 seconds
+  checkAndRefresh();
+  const id = setInterval(checkAndRefresh, CHECK_EVERY_MS);
+
+  // Optional: expose a stop function
+  window.__stopErrorWatchRefresh = () => {
+    clearInterval(id);
+    console.log("🛑 Stopped error-watch refresh interval");
+  };
+})();
+
+
