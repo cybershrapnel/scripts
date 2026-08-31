@@ -1,4 +1,5 @@
 //adds a download playing song button where the mute button is on the media player bar. will restart current song and pipe the audio through a wave recorder and the saves the wav as a download when the song finishes playing. must let song play all the way through make sure volume is at 100%.
+//This was built to work from a playlist page.
 
 (() => {
   if (window.__sunoRec) return console.log("already on — click the red SAVE button");
